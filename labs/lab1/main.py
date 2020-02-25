@@ -28,7 +28,7 @@ def leave_one_out_cv(regressor, data, class_count):
     return f1_score(y_true, y_pred, average="weighted")
 
 
-def grid_search_cv(regressor, grid_params, data, class_count):
+def grid_search_cv(regressor, grid_params, data, class_count, verbose=False):
     params_list = list(grid_params.keys())
     best_score = 0.0
     best_params = {}
@@ -36,9 +36,11 @@ def grid_search_cv(regressor, grid_params, data, class_count):
     for params in (dict(zip(grid_params.keys(), values)) for values in product(*grid_params.values())):
                 knn = regressor(**params, class_count=class_count)
                 score = leave_one_out_cv(knn, data, class_count)
-                # format_list = list(params.values())
-                # format_list.append(score)
-                # print('%12s : %12s : %10s : %3d = %7.5f' % tuple(format_list))
+
+                if verbose:
+                    format_list = list(params.values())
+                    format_list.append(score)
+                    print('%12s : %12s : %10s : %3d = %7.5f' % tuple(format_list))
 
                 if score > best_score:
                     best_score = score
