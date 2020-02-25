@@ -1,66 +1,63 @@
 import pandas as pd
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
+from sklearn.model_selection import LeaveOneOut
+from sklearn.metrics import f1_score
+import time
+import json
+from knn import KnnRegressor
 
-dataset = pd.read_csv("abalone.csv")
+if __name__ == '__main__':
+    # distance_type = "euclidean"
+    # kernel_type = "gaussian"
+    window_type = "variable"
+    # h = 10
 
-V1 = {'F': 0, 'I': 1, 'M': 2}
-dataset['V1'] = dataset['V1'].map(V1)
+    # load data
+    dataset = pd.read_csv("abalone.csv")[:1000]
 
-columns = list(dataset.columns[:-1])
-for column in columns[1:]:
-    dataset[column] = pd.qcut(dataset[column], 4, labels=False)
+    V1 = {'F': 0, 'I': 1, 'M': 2}
+    ClassLabels = {1: 0.0, 2: 1.0, 3: 2.0}
+    dataset['V1'] = dataset['V1'].map(V1)
+    dataset['Class'] = dataset['Class'].map(ClassLabels)
 
+    X = dataset.drop(dataset.columns[-1], axis=1)
+    y = dataset[dataset.columns[-1]]
 
-def countplot(x_name, dataframe, sub):
-    plt.subplot(sub)
-    sns.countplot(x=x_name, hue='Class', data=dataframe)
+    # normalize data
+    columns = list(X.columns)
+    columns_bins = {}
+    for column in columns[1:]:
+        X[column], bins = pd.qcut(X[column], 5, retbins=True, labels=False)
+        columns_bins[column] = bins
 
+    normalized_dataset = X.join(y)
+    del X
 
-plt.figure(figsize=(16, 4))
-sub = 241
+    start = time.time()
 
-for column in columns:
-    print(column, sub)
-    countplot(column, dataset, sub)
-    sub += 1
+    scores = {}
+    for kernel_type in ['uniform', 'gaussian']:
+        scores[kernel_type] = {}
+        for distance_type in ['euclidean', 'manhattan', 'chebyshev']:
+            scores[kernel_type][distance_type] = []
+            for h in range(1, 30, 2):
 
-plt.subplots_adjust(hspace=0.5)
-# plt.show()
+                knn = KnnRegressor(distance_type, kernel_type, window_type, h)
+                y_pred = []
 
+                loo = LeaveOneOut()
+                for train_index, test_index in loo.split(normalized_dataset):
+                    knn.fit(normalized_dataset.iloc[train_index])
 
-X = dataset[columns]
-y = dataset['Class']
+                    test = np.array(normalized_dataset.iloc[test_index])[0][:-1]
+                    y_pred.append(np.round(knn.predict(test)))
 
-from sklearn.model_selection import train_test_split, GridSearchCV
-from sklearn.metrics import confusion_matrix, f1_score
-from sklearn.neighbors import KNeighborsRegressor
+                score = f1_score(y.to_numpy(), y_pred, average="weighted")
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=2020)
-knn = KNeighborsRegressor(n_neighbors=3, metric='minkowski', p=1)
-knn.fit(X_train, y_train)
-y_pred = np.round(knn.predict(X_test))
+                print('%s : %s : %d = %.5f' % (kernel_type, distance_type, h, score))
+                scores[kernel_type][distance_type].append((h, score))
 
-print(confusion_matrix(y_test, y_pred))
-print(f1_score(y_test, y_pred, average='weighted'))
+    with open('scores.json', 'w') as fp:
+        json.dump(scores, fp)
 
-param_grid = {
-    'n_neighbors': [1, 3, 5, 10, 50, 100],
-    'metric': ['minkowski', 'euclidean', 'chebyshev'],
-    'weights': ['uniform', 'distance'],
-    'p': [1, 2, 3, 4]
-}
-
-knn_boosting = KNeighborsRegressor()
-clf = GridSearchCV(estimator=knn_boosting, param_grid=param_grid, n_jobs=-1)
-clf.fit(X_train, y_train)
-print(clf.best_params_)
-
-knn = KNeighborsRegressor(**clf.best_params_)
-knn.fit(X_train, y_train)
-y_pred = np.round(knn.predict(X_test))
-print(confusion_matrix(y_test, y_pred))
-print(f1_score(y_test, y_pred, average='weighted'))
-
-
+    print(time.time() - start)
