@@ -23,7 +23,6 @@ def leave_one_out_cv(regressor, data, class_count):
         else:
             y_true.append(np.argmax(np.array(data.iloc[test_index])[0][-class_count:]))
             pred = regressor.predict(test)
-            # print(pred)
             y_pred.append(np.argmax(pred))
 
     return f1_score(y_true, y_pred, average="weighted")
@@ -51,6 +50,8 @@ def grid_search_cv(regressor, grid_params, data, class_count):
 
 def plot(neighbors_count, f_score):
     plt.plot(neighbors_count, f_score, color='blue', linestyle='solid', label='sin(x)')
+    plt.xlabel('Neighbors count')
+    plt.ylabel('F1 score')
     plt.show()
 
 
