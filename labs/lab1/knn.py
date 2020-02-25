@@ -1,14 +1,16 @@
 from util import kernels, metrics
+import numpy as np
 
 
 class KnnRegressor:
 
-    def __init__(self, metric="euclidean", kernel="uniform", win_type="fixed", k=5):
+    def __init__(self, metric="euclidean", kernel="uniform", win_type="fixed", k=5, class_count=1):
         self.data = []
         self.metric = metric
         self.kernel = kernel
         self.win_type = win_type
         self.k = k
+        self.class_count = class_count
 
     def fit(self, data):
         self.data = data.to_numpy()
@@ -17,8 +19,8 @@ class KnnRegressor:
         N = len(self.data)
         dists = []
         for row in self.data:
-            d = metrics[self.metric](row[:-1], query)
-            dists.append((d, row[-1]))
+            d = metrics[self.metric](row[:-self.class_count], query)
+            dists.append((d, row[-self.class_count:]))
 
         y_weights = []
         weights = []
@@ -36,6 +38,14 @@ class KnnRegressor:
                 k = kernels[self.kernel](u)
 
             weights.append(k)
-            y_weights.append(dist[1] * k)
+            y_weights.append(np.array(dist[1]) * k)
 
-        return sum(row[-1] for row in self.data) / N if sum(weights) == 0 else sum(y_weights) / sum(weights)
+        res = []
+        if sum(weights) == 0:
+            for i in range(1, self.class_count + 1):
+                res.insert(0, sum(row[-i] for row in self.data) / N)
+        else:
+            for i in range(1, self.class_count + 1):
+                res.insert(0, sum([w[-i] for w in y_weights]) / sum(weights))
+
+        return res
