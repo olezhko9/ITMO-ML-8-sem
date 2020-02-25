@@ -1,19 +1,56 @@
-import pandas as pd
-import numpy as np
 from sklearn.model_selection import LeaveOneOut
 from sklearn.metrics import f1_score
+import matplotlib.pyplot as plt
+from itertools import product
+import pandas as pd
+import numpy as np
 import time
-import json
+
 from knn import KnnRegressor
 
-if __name__ == '__main__':
-    # distance_type = "euclidean"
-    # kernel_type = "gaussian"
-    window_type = "variable"
-    # h = 10
 
+def leave_one_out_cv(regressor):
+    y_pred = []
+
+    loo = LeaveOneOut()
+    for train_index, test_index in loo.split(normalized_dataset):
+        regressor.fit(normalized_dataset.iloc[train_index])
+
+        test = np.array(normalized_dataset.iloc[test_index])[0][:-1]
+        y_pred.append(np.round(regressor.predict(test)))
+
+    return f1_score(y.to_numpy(), y_pred, average="weighted")
+
+
+def grid_search_cv(regressor, grid_params):
+    params_list = list(grid_params.keys())
+    best_score = 0.0
+    best_params = {}
+
+    for params in (dict(zip(grid_params.keys(), values)) for values in product(*grid_params.values())):
+                knn = regressor(**params)
+                score = leave_one_out_cv(knn)
+                # format_list = list(params.values())
+                # format_list.append(score)
+                # print('%12s : %12s : %10s : %3d = %7.5f' % tuple(format_list))
+
+                if score > best_score:
+                    best_score = score
+                    for p_name in params_list:
+                        best_params[p_name] = params[p_name]
+
+    return best_params, best_score
+
+
+def plot(neighbors_count, f_score):
+    plt.plot(neighbors_count, f_score, color='blue', linestyle='solid', label='sin(x)')
+    plt.show()
+
+
+if __name__ == '__main__':
+    N = 500
     # load data
-    dataset = pd.read_csv("abalone.csv")[:1000]
+    dataset = pd.read_csv("abalone.csv")[:N]
 
     V1 = {'F': 0, 'I': 1, 'M': 2}
     ClassLabels = {1: 0.0, 2: 1.0, 3: 2.0}
@@ -35,29 +72,24 @@ if __name__ == '__main__':
 
     start = time.time()
 
-    scores = {}
-    for kernel_type in ['uniform', 'gaussian']:
-        scores[kernel_type] = {}
-        for distance_type in ['euclidean', 'manhattan', 'chebyshev']:
-            scores[kernel_type][distance_type] = []
-            for h in range(1, 30, 2):
+    grid_params = {
+        'metric': ['euclidean', 'manhattan'],
+        'kernel': ['uniform', 'gaussian'],
+        'win_type': ['variable'],
+        'k': range(1, 30, 2),
+    }
 
-                knn = KnnRegressor(distance_type, kernel_type, window_type, h)
-                y_pred = []
-
-                loo = LeaveOneOut()
-                for train_index, test_index in loo.split(normalized_dataset):
-                    knn.fit(normalized_dataset.iloc[train_index])
-
-                    test = np.array(normalized_dataset.iloc[test_index])[0][:-1]
-                    y_pred.append(np.round(knn.predict(test)))
-
-                score = f1_score(y.to_numpy(), y_pred, average="weighted")
-
-                print('%s : %s : %d = %.5f' % (kernel_type, distance_type, h, score))
-                scores[kernel_type][distance_type].append((h, score))
-
-    with open('scores.json', 'w') as fp:
-        json.dump(scores, fp)
-
+    best_params, best_score = grid_search_cv(KnnRegressor, grid_params)
+    print(best_params)
+    print(best_score)
     print(time.time() - start)
+
+    best_params.pop('k', None)
+
+    scores = []
+    max_k = 30
+    for k in range(1, max_k):
+        knn = KnnRegressor(**best_params, k=k)
+        scores.append(leave_one_out_cv(knn))
+
+    plot([k for k in range(1, max_k)], scores)
