@@ -76,6 +76,7 @@ if __name__ == '__main__':
         columns_bins[column] = bins
 
     # NAIVE
+    class_count = 1
     normalized_dataset = X.join(y)
 
     start = time.time()
@@ -88,7 +89,7 @@ if __name__ == '__main__':
         'k': k_range,
     }
 
-    best_params, best_score = grid_search_cv(KnnRegressor, grid_params, normalized_dataset, class_count=1)
+    best_params, best_score = grid_search_cv(KnnRegressor, grid_params, normalized_dataset, class_count)
     print(best_params)
     print(best_score)
     print(time.time() - start)
@@ -97,12 +98,13 @@ if __name__ == '__main__':
 
     scores = []
     for k in k_range:
-        knn = KnnRegressor(**best_params, k=k, class_count=1)
-        scores.append(leave_one_out_cv(knn, normalized_dataset, class_count=1))
+        knn = KnnRegressor(**best_params, k=k, class_count=class_count)
+        scores.append(leave_one_out_cv(knn, normalized_dataset, class_count))
 
     plot([k for k in k_range], scores)
 
     # ONE HOT
+    class_count = 3
     y = pd.get_dummies(y, dtype=float)
     normalized_dataset = X.join(y)
     del X
@@ -117,7 +119,7 @@ if __name__ == '__main__':
         'k': k_range,
     }
 
-    best_params, best_score = grid_search_cv(KnnRegressor, grid_params, normalized_dataset, class_count=3)
+    best_params, best_score = grid_search_cv(KnnRegressor, grid_params, normalized_dataset, class_count)
     print(best_params)
     print(best_score)
     print(time.time() - start)
@@ -126,7 +128,7 @@ if __name__ == '__main__':
 
     scores = []
     for k in k_range:
-        knn = KnnRegressor(**best_params, k=k, class_count=3)
-        scores.append(leave_one_out_cv(knn, normalized_dataset, class_count=3))
+        knn = KnnRegressor(**best_params, k=k, class_count=class_count)
+        scores.append(leave_one_out_cv(knn, normalized_dataset, class_count))
 
     plot([k for k in k_range], scores)
