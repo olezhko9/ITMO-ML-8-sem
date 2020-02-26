@@ -80,6 +80,7 @@ if __name__ == '__main__':
     # NAIVE
     class_count = 1
     normalized_dataset = X.join(y)
+    print(normalized_dataset.head(10))
 
     start = time.time()
 
@@ -94,7 +95,6 @@ if __name__ == '__main__':
     best_params, best_score = grid_search_cv(KnnRegressor, grid_params, normalized_dataset, class_count)
     print(best_params)
     print(best_score)
-    print(time.time() - start)
 
     best_params.pop('k', None)
 
@@ -104,12 +104,15 @@ if __name__ == '__main__':
         scores.append(leave_one_out_cv(knn, normalized_dataset, class_count))
 
     plot([k for k in k_range], scores)
+    print(time.time() - start)
 
     # ONE HOT
     class_count = 3
     y = pd.get_dummies(y, dtype=float)
     normalized_dataset = X.join(y)
     del X
+
+    print(normalized_dataset.head(10))
 
     start = time.time()
 
