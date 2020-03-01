@@ -7,7 +7,7 @@ class PseudoinverseRegressor:
 
     def fit(self, X_train, y_train):
         self.theta = np.dot(np.linalg.pinv(X_train), y_train)
-        print('theta: ', self.theta.shape)
+        return self.theta
 
     def predict(self, X_test):
         if self.theta is not None:

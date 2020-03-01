@@ -2,6 +2,7 @@ import numpy as np
 from pseudoinverse import PseudoinverseRegressor
 from metric import nrmse, smape
 
+
 train = []
 test = []
 with open('./dataset/1.txt', 'r') as f:
@@ -19,10 +20,10 @@ with open('./dataset/1.txt', 'r') as f:
 train = np.array(train)
 test = np.array(test)
 
-X_train = train[:, :-1]
+X_train = np.append(train[:, :-1], np.ones((N, 1)), axis=1)
 y_train = train[:, -1]
 
-X_test = test[:, :-1]
+X_test = np.append(test[:, :-1], np.ones((K, 1)), axis=1)
 y_test = test[:, -1]
 
 print('train: ', train.shape)
@@ -30,7 +31,7 @@ print('test: ', test.shape)
 
 
 pseudoinverseRegressor = PseudoinverseRegressor()
-pseudoinverseRegressor.fit(X_train, y_train)
+theta = pseudoinverseRegressor.fit(X_train, y_train)
 res = pseudoinverseRegressor.predict(X_test)
 
 print(nrmse(y_test, res))
