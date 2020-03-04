@@ -3,9 +3,11 @@ from metric import smape, nrmse
 
 
 class GradientDescentRegressor:
-    def __init__(self, lr=1e-9, max_iter=1000, eps=1e-10):
+    def __init__(self, lr=1e-9, max_iter=1000, penalty='l2', a=1, eps=1e-10):
         self.lr = lr
         self.max_iter = max_iter
+        self.penalty = penalty
+        self.a = a
         self.eps = eps
 
         self.w = None
@@ -28,7 +30,11 @@ class GradientDescentRegressor:
 
         for it in range(self.max_iter):
             y_pred = self.X.dot(self.w)
-            self.w = self.w - self.lr * self._gradient(y_pred)
+
+            if self.penalty == 'l1':
+                self.w = self.w - self.lr * (self._gradient(y_pred) - 1 / self.a * np.sign(self.w))
+            else:
+                self.w = self.w - self.lr * (self._gradient(y_pred) - 1 / self.a * self.w)
 
             error_list.append(self._cost(y_pred))
             if it >= 2 and np.abs(error_list[-1] - error_list[-2]) < self.eps:

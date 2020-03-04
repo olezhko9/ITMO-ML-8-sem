@@ -1,6 +1,19 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from sklearn import preprocessing
 from metric import nrmse, smape
+
+
+def normalize(arr, norm='minmax'):
+    if norm == 'normalize':
+        return preprocessing.normalize(arr, axis=0), None
+    elif norm == 'minmax':
+        scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
+        return scaler.fit_transform(arr), scaler
+    elif norm == 'scaler':
+        scaler = preprocessing.StandardScaler()
+        scaler.fit(arr)
+        return scaler.transform(arr), scaler
 
 
 # reading data
@@ -59,7 +72,7 @@ print(np.round(y_test_pred[:18].flatten(), 0))
 # # GRADIENT DESCENT
 from gradient_descent import GradientDescentRegressor
 
-GDRegressor = GradientDescentRegressor(lr=5e-9, max_iter=2000, eps=1e-10)
+GDRegressor = GradientDescentRegressor(lr=5e-9, max_iter=2000, penalty='l2', a=1000, eps=1e-10)
 _, err = GDRegressor.fit(X_train, y_train)
 
 plt.plot(err)
