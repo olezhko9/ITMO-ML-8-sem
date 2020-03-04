@@ -6,7 +6,7 @@ def nrmse(actual, predicted):
 
 
 def smape(y_true, y_pred):
-    return 2 * np.mean(np.abs(y_true - y_pred) / (np.abs(y_true) + np.abs(y_pred)))
+    return np.mean(2 * np.abs(y_true - y_pred) / (np.abs(y_true) + np.abs(y_pred)))
 
 
 def mse(y_true, y_pred):
