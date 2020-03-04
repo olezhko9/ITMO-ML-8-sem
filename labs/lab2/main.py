@@ -40,17 +40,18 @@ from pseudoinverse import PseudoinverseRegressor
 
 pseudoinverseRegressor = PseudoinverseRegressor()
 theta = pseudoinverseRegressor.fit(X_train, y_train)
+
 y_train_pred = pseudoinverseRegressor.predict(X_train)
-y_test_pred = pseudoinverseRegressor.predict(X_test)
 
 print('train nrmse: ', nrmse(y_train, y_train_pred))
-print('test nrmse: ', nrmse(y_test, y_test_pred))
 print('train smape: ', smape(y_train, y_train_pred))
-print('test smape: ', smape(y_test, y_test_pred))
-
 print(np.round(y_train[:18].flatten(), 0))
 print(np.round(y_train_pred[:18].flatten(), 0))
 
+y_test_pred = pseudoinverseRegressor.predict(X_test)
+
+print('test nrmse: ', nrmse(y_test, y_test_pred))
+print('test smape: ', smape(y_test, y_test_pred))
 print(np.round(y_test[:18].flatten(), 0))
 print(np.round(y_test_pred[:18].flatten(), 0))
 
@@ -58,7 +59,7 @@ print(np.round(y_test_pred[:18].flatten(), 0))
 # # GRADIENT DESCENT
 from gradient_descent import GradientDescentRegressor
 
-GDRegressor = GradientDescentRegressor(lr=2e-9, max_iter=4000, eps=1e-10)
+GDRegressor = GradientDescentRegressor(lr=5e-9, max_iter=2000, eps=1e-10)
 _, err = GDRegressor.fit(X_train, y_train)
 
 plt.plot(err)
@@ -67,16 +68,16 @@ plt.ylabel("Cost")
 plt.show()
 
 y_train_pred = GDRegressor.predict(X_train)
-y_test_pred = GDRegressor.predict(X_test)
 
 print('train nrmse: ', nrmse(y_train, y_train_pred))
-print('test nrmse: ', nrmse(y_test, y_test_pred))
 print('train smape: ', smape(y_train, y_train_pred))
-print('test smape: ', smape(y_test, y_test_pred))
-
 print(np.round(y_train[:18].flatten(), 0))
 print(np.round(y_train_pred[:18].flatten(), 0))
 
+y_test_pred = GDRegressor.predict(X_test)
+
+print('test nrmse: ', nrmse(y_test, y_test_pred))
+print('test smape: ', smape(y_test, y_test_pred))
 print(np.round(y_test[:18].flatten(), 0))
 print(np.round(y_test_pred[:18].flatten(), 0))
 
@@ -92,9 +93,15 @@ plt.ylabel("Cost")
 plt.show()
 
 y_train_pred = X_train @ weights
-y_test_pred = X_test @ weights
 
 print('train nrmse: ', nrmse(y_train, y_train_pred))
-print('test nrmse: ', nrmse(y_test, y_test_pred))
 print('train smape: ', smape(y_train, y_train_pred))
+print(np.round(y_train[:18].flatten(), 0))
+print(np.round(y_train_pred[:18].flatten(), 0))
+
+y_test_pred = X_test @ weights
+
+print('test nrmse: ', nrmse(y_test, y_test_pred))
 print('test smape: ', smape(y_test, y_test_pred))
+print(np.round(y_test[:18].flatten(), 0))
+print(np.round(y_test_pred[:18].flatten(), 0))

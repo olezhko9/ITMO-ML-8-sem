@@ -6,7 +6,7 @@ def annealing(X, y, lr=0.1):
     error_list = []
     t = 1.0
     weights = np.array([np.random.uniform(X[:, i].min(), X[:, i].max()) for i in range(len(X[0]))], copy=True)
-    while t > 0.6:
+    while t > 0.1:
 
         e_old = nrmse(y, X @ weights)
 
