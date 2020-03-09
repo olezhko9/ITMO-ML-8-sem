@@ -60,8 +60,19 @@ def grid_search_cv(estimator, grid_params, X, y, scoring, verbose=False):
 X, y = read_data('./dataset/chips.csv')
 
 parameters = {
+    'kernel': ['linear'],
+    'gamma': np.arange(0.1, 1.0, 0.1),
+    'C': [1, 3, 5, 10, 30, 50, 100, 200, 500]
+}
+
+clf, best_params, best_score = grid_search_cv(SVC(gamma='scale'), parameters, X, y, scoring=f1_score, verbose=False)
+print(best_params, best_score)
+scatter(X, y, clf)
+
+
+parameters = {
     'kernel': ['poly'],
-    'degree': [1, 2, 3, 4, 5, 6],
+    'degree': [2, 3, 4, 5, 6],
     'C': [1, 3, 5, 10, 30, 50, 100, 200, 500]
 }
 
@@ -84,8 +95,18 @@ scatter(X, y, clf)
 X, y = read_data('./dataset/geyser.csv')
 
 parameters = {
+    'kernel': ['linear'],
+    'gamma': np.arange(0.1, 1.0, 0.1),
+    'C': [1, 3, 5, 10, 30, 50, 100, 200, 500]
+}
+
+clf, best_params, best_score = grid_search_cv(SVC(gamma='scale'), parameters, X, y, scoring=f1_score, verbose=False)
+print(best_params, best_score)
+scatter(X, y, clf)
+
+parameters = {
     'kernel': ['poly'],
-    'degree': [1, 2, 3, 4, 5, 6],
+    'degree': [2, 3, 4, 5, 6],
     'C': [1, 5, 10, 50, 100, 500]
 }
 
