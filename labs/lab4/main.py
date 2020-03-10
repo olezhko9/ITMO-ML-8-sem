@@ -22,26 +22,24 @@ for i in range(1, 11):
         messages.append([subject, text, is_spam])
 
 messages = pd.DataFrame(messages, columns=['subject', 'text', 'spam'])
-print(messages)
-
-X = messages['text']
+X = messages['subject'] + ' ' + messages['text']
 y = messages['spam']
 
 vectorizer = CountVectorizer(ngram_range=(1, 1))
 X = vectorizer.fit_transform(X).toarray()
 
-spam_classifier = NaiveBayesClassifier()
-spam_classifier.fit(X, y)
-
 scoring = {
     'accuracy': make_scorer(accuracy_score),
     'f1_score': make_scorer(f1_score)
 }
-score = cross_validate(spam_classifier, X, y, cv=10, scoring=scoring)
+score = cross_validate(NaiveBayesClassifier(), X, y, cv=10, scoring=scoring)
 
 print('accuracy:', np.mean(score['test_accuracy']))
 print('f1_score:', np.mean(score['test_f1_score']))
 
+
+spam_classifier = NaiveBayesClassifier()
+spam_classifier.fit(X, y)
 y_pred_proba = spam_classifier.predict_proba(X)
 
 
@@ -67,6 +65,7 @@ def class_accuracy(y, y_pred, label):
 
 f1_scores = []
 legit_accuracy = []
+spam_accuracy = []
 power = 0
 fp = -1
 while fp != 0:
@@ -78,6 +77,7 @@ while fp != 0:
     print("%2d: TN = %3d, FP = %2d, FN = %2d, TP = %3d" % (power, tn, fp, fn, tp))
     f1_scores.append(f1_score(y, y_pred))
     legit_accuracy.append(class_accuracy(y, y_pred, 0))
+    spam_accuracy.append(class_accuracy(y, y_pred, 1))
     power += 1
 
 plt.plot(range(0, power), f1_scores)
@@ -85,7 +85,8 @@ plt.xlabel('lambda (10^x)')
 plt.ylabel('f1 score')
 plt.show()
 
-plt.plot(range(0, power), legit_accuracy)
+plt.plot(range(0, power), legit_accuracy, 'r-', range(0, power), spam_accuracy, 'b-')
 plt.xlabel('lambda (10^x)')
-plt.ylabel('Legit accuracy')
+plt.ylabel('Label accuracy')
+plt.legend(['Legit', 'Spam'])
 plt.show()
