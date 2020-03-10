@@ -3,8 +3,9 @@ from sklearn.base import BaseEstimator
 
 
 class NaiveBayesClassifier(BaseEstimator):
-    def __init__(self, smooth=1.0):
+    def __init__(self, smooth=1.0, lambdas=None):
         self.smooth = smooth
+        self.lambdas = lambdas
 
     def fit(self, X, y):
         self.total_counts = np.sum(X, axis=0)
@@ -15,15 +16,16 @@ class NaiveBayesClassifier(BaseEstimator):
 
         for label in self.labels:
             self.word_probas[label] = (np.sum(X[y == label], axis=0) + self.smooth) / (
-                        self.smooth * X.shape[1] + np.sum(X[y == label]))
+                    self.smooth * X.shape[1] + np.sum(X[y == label]))
             self.label_probas[label] = float(y[y == label].shape[0]) / y.shape[0]
 
     def _log_proba(self, x, label):
-        labels_weights = np.array([1, 1])
-        return np.log(labels_weights[label] * self.label_probas[label]) + np.sum(np.log(self.word_probas[label][x != 0]))
+        return np.log(self.labels_weights[label] * self.label_probas[label]) + np.sum(
+            np.log(self.word_probas[label][x != 0]))
 
     def predict_log_proba(self, X):
         label_probas = np.zeros((X.shape[0], self.labels.shape[0]))
+        self.labels_weights = np.ones((self.labels.shape[0],)) if self.lambdas is None else self.lambdas
 
         for i in np.arange(0, X.shape[0]):
             for label in self.labels:

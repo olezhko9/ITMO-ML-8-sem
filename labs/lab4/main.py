@@ -1,11 +1,10 @@
 import os
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from bayes import NaiveBayesClassifier
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.metrics import make_scorer, accuracy_score, f1_score, roc_curve
+from sklearn.metrics import make_scorer, accuracy_score, f1_score, roc_curve, confusion_matrix
 from sklearn.model_selection import cross_validate
 
 messages_dir = './messages/part'
@@ -30,7 +29,6 @@ y = messages['spam']
 
 vectorizer = CountVectorizer(ngram_range=(1, 1))
 X = vectorizer.fit_transform(X).toarray()
-# print(vectorizer.get_feature_names()
 
 spam_classifier = NaiveBayesClassifier()
 spam_classifier.fit(X, y)
@@ -59,3 +57,35 @@ def plot_roc_curve(y, y_proba):
 
 
 plot_roc_curve(y, y_pred_proba)
+
+
+def class_accuracy(y, y_pred, label):
+    y_labels = y[y == label]
+    y_pred_labels = y_pred[y == label]
+    return float(np.sum(y_labels == y_pred_labels)) / y_labels.shape[0]
+
+
+f1_scores = []
+legit_accuracy = []
+power = 0
+fp = -1
+while fp != 0:
+    spam_classifier = NaiveBayesClassifier(lambdas=[10 ** power, 1])
+    spam_classifier.fit(X, y)
+
+    y_pred = spam_classifier.predict(X)
+    tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()
+    print("%2d: TN = %3d, FP = %2d, FN = %2d, TP = %3d" % (power, tn, fp, fn, tp))
+    f1_scores.append(f1_score(y, y_pred))
+    legit_accuracy.append(class_accuracy(y, y_pred, 0))
+    power += 1
+
+plt.plot(range(0, power), f1_scores)
+plt.xlabel('lambda (10^x)')
+plt.ylabel('f1 score')
+plt.show()
+
+plt.plot(range(0, power), legit_accuracy)
+plt.xlabel('lambda (10^x)')
+plt.ylabel('Legit accuracy')
+plt.show()
