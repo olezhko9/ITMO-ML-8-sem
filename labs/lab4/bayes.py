@@ -1,7 +1,8 @@
 import numpy as np
+from sklearn.base import BaseEstimator
 
 
-class NaiveBayesClassifier:
+class NaiveBayesClassifier(BaseEstimator):
     def __init__(self, smooth=1.0):
         self.smooth = smooth
 
@@ -21,11 +22,25 @@ class NaiveBayesClassifier:
         labels_weights = np.array([1, 1])
         return np.log(labels_weights[label] * self.label_probas[label]) + np.sum(np.log(self.word_probas[label][x != 0]))
 
-    def predict(self, X):
+    def predict_log_proba(self, X):
         label_probas = np.zeros((X.shape[0], self.labels.shape[0]))
 
         for i in np.arange(0, X.shape[0]):
             for label in self.labels:
                 label_probas[i][label] = self._log_proba(X[i], label)
 
-        return np.argmax(label_probas, axis=1)
+        return label_probas
+
+    def predict(self, X):
+        return np.argmax(self.predict_log_proba(X), axis=1)
+
+    def predict_proba(self, X):
+        label_log_probas = self.predict_log_proba(X)
+
+        for i in np.arange(0, X.shape[0]):
+            label_log_probas[i] = [
+                1 / (1 + np.exp(label_log_probas[i][1] - label_log_probas[i][0])),
+                1 / (1 + np.exp(label_log_probas[i][0] - label_log_probas[i][1]))
+            ]
+
+        return label_log_probas

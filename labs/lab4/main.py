@@ -1,12 +1,12 @@
+import os
+
 import numpy as np
 import pandas as pd
-import os
 import matplotlib.pyplot as plt
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
-
 from bayes import NaiveBayesClassifier
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics import make_scorer, accuracy_score, f1_score, roc_curve
+from sklearn.model_selection import cross_validate
 
 messages_dir = './messages/part'
 messages = []
@@ -32,18 +32,30 @@ vectorizer = CountVectorizer(ngram_range=(1, 1))
 X = vectorizer.fit_transform(X).toarray()
 # print(vectorizer.get_feature_names()
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, shuffle=True, random_state=0)
-
 spam_classifier = NaiveBayesClassifier()
-spam_classifier.fit(X_train, y_train)
-y_pred = spam_classifier.predict(X_train)
+spam_classifier.fit(X, y)
 
-print(accuracy_score(y_train, y_pred))
-print(f1_score(y_train, y_pred))
-print(confusion_matrix(y_train, y_pred))
+scoring = {
+    'accuracy': make_scorer(accuracy_score),
+    'f1_score': make_scorer(f1_score)
+}
+score = cross_validate(spam_classifier, X, y, cv=10, scoring=scoring)
 
-y_pred = spam_classifier.predict(X_test)
+print('accuracy:', np.mean(score['test_accuracy']))
+print('f1_score:', np.mean(score['test_f1_score']))
 
-print(accuracy_score(y_test, y_pred))
-print(f1_score(y_test, y_pred))
-print(confusion_matrix(y_test, y_pred))
+y_pred_proba = spam_classifier.predict_proba(X)
+
+
+def plot_roc_curve(y, y_proba):
+    fpr, tpr, thresholds = roc_curve(y, y_proba[:, 1])
+    plt.plot(fpr, tpr, color='orange', label='ROC')
+    plt.plot([0, 1], [0, 1], color='darkblue', linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title('ROC Curve')
+    plt.legend()
+    plt.show()
+
+
+plot_roc_curve(y, y_pred_proba)
