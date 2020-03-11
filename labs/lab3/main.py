@@ -3,7 +3,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from itertools import product
 from sklearn.svm import SVC
-from sklearn.metrics import f1_score
+from sklearn.metrics import make_scorer, f1_score
+from sklearn.model_selection import cross_val_score
 
 
 def read_data(path_to_csv):
@@ -42,9 +43,8 @@ def grid_search_cv(estimator, grid_params, X, y, scoring, verbose=False):
 
     for params in (dict(zip(grid_params.keys(), values)) for values in product(*grid_params.values())):
         estimator.set_params(**params)
-        estimator.fit(X, y)
-        y_pred = estimator.predict(X)
-        score = scoring(y, y_pred)
+        scores = cross_val_score(estimator, X, y, scoring=make_scorer(scoring), cv=5)
+        score = np.mean(scores)
 
         if verbose:
             print(tuple(params.values()), score)
