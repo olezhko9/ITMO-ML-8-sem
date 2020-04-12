@@ -37,9 +37,11 @@ class KMeans:
             if optimized:
                 break
 
+        return self.centroids
+
     def predict(self, data):
         predictions = []
         for feature_set in data:
             distances = [np.linalg.norm(feature_set - self.centroids[i]) for i in range(self.k)]
             predictions.append(np.argmin(distances))
-        return predictions
+        return np.array(predictions)
